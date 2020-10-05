@@ -12,7 +12,7 @@ echo "#################### git commit -m \"daily\" ####################"
 git commit -m "daily"
 
 echo "#################### git push -u origin master ####################"
-git push -u origin master
+git push -u origin main
 
 echo "#################### done ####################"
 
