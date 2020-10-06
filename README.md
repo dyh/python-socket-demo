@@ -1,6 +1,6 @@
 # python socket demo
 
-transfer image files and text message via python socket. 
+transfer binary image files and text message via python socket. 
 
 
 # Requirements
