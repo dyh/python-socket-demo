@@ -1,4 +1,4 @@
-from socket_server.server import Server
+from server import Server
 
 if __name__ == '__main__':
     print('socket server is starting...')

@@ -1,12 +1,14 @@
 # coding:utf-8
-import datetime
-import socket
-import time
-from threading import Thread
+
 import cv2
+import time
+import socket
+import datetime
 import numpy as np
-from socket_server.message import Message
+from threading import Thread
 from multiprocessing import Manager
+
+from message import Message
 
 
 class Server:
@@ -120,15 +122,15 @@ class Server:
 
                 # do some image processing here
                 image_copy = image_origin.copy()
-                # record time point
+
+                # record server time
                 server_time = datetime.datetime.now()
 
-                # print('server time: ' + str(server_time) + ', ', end='')
-                str_text = 'thread name: ' + thread_name + ', server time:' + str(server_time)
-                print(str_text)
+                text_message = 'thread name: ' + thread_name + ', server time: ' + str(server_time)
+                print(text_message)
 
-                # send
-                message.write(image_copy, str_text)
+                # send image object
+                message.write(image_copy, text_message)
 
                 if self.dict_loop_flag.get(thread_name) is True:
                     # update the timestamp of each latest message
@@ -140,7 +142,6 @@ class Server:
                 pass
 
                 time.sleep(0.00001)
-
             pass
 
             # close socket

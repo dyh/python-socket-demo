@@ -1,10 +1,10 @@
 # coding:utf-8
 
-import sys
-import json
 import io
-import struct
+import sys
 import cv2
+import json
+import struct
 
 
 class Message:
@@ -13,35 +13,20 @@ class Message:
         self._addr = addr
         self._recv_buffer = b""
         self._send_buffer = b""
-        self._jsonheader_len = None
         self._jsonheader = None
+        self._jsonheader_len = None
         self._response_created = False
-        # self._response = None
         self._request = None
 
     def get_result(self):
         return self._request
 
-    def clear_result(self):
-        self._request = None
-
     def clear(self):
-        # self._recv_buffer = b""
-        # self._send_buffer = b""
-        self._jsonheader_len = None
         self._jsonheader = None
+        self._jsonheader_len = None
         self._response_created = False
-        # self._response = None
         self._request = None
         pass
-
-    @staticmethod
-    def create_request(action_tmp, value):
-        return dict(
-            type="binary/image",
-            encoding=action_tmp,
-            content=value,
-        )
 
     def _socket_read(self):
         try:
@@ -54,7 +39,9 @@ class Message:
             if data:
                 self._recv_buffer += data
             else:
-                raise RuntimeError("Peer closed.")
+                raise RuntimeError("remote socket closed.")
+            pass
+        pass
 
     def _socket_write(self):
         if self._send_buffer:
@@ -68,10 +55,7 @@ class Message:
                 pass
             else:
                 self._send_buffer = self._send_buffer[sent:]
-                # Close when the buffer is drained. The response has been sent.
-                # if sent and not self._send_buffer:
-                #     self._set_selector_events_mask("r")
-                #     self.close()
+            pass
 
     @staticmethod
     def _json_encode(obj, encoding):
@@ -103,15 +87,19 @@ class Message:
             self._socket_read()
 
             if self._jsonheader_len is None:
-                self._process_protoheader()
+                self._process_proto_header()
 
             if self._jsonheader_len is not None:
                 if self._jsonheader is None:
-                    self._process_jsonheader()
+                    self._process_json_header()
 
             if self._jsonheader:
                 if self._request is None:
                     self._process_request()
+                    pass
+                pass
+            pass
+        pass
 
     def write(self, img_obj, text):
         # if self._request:
@@ -119,8 +107,8 @@ class Message:
             ret, img_encode = cv2.imencode('.png', img_obj)
             str_encode = img_encode.tostring()
 
-            if text:
-                # generate json message
+            if text is not None:
+                # create text/json message
                 content = {"result": text}
                 content_encoding = "utf-8"
                 response = {
@@ -132,7 +120,7 @@ class Message:
                 self._send_buffer += message
 
             if img_obj is not None:
-                # generate binary message
+                # create binary/image message
                 response = {
                     "content_bytes": str_encode,
                     "content_type": "binary/image",
@@ -147,13 +135,15 @@ class Message:
         # send buffer to socket
         self._socket_write()
 
-    def _process_protoheader(self):
+    def _process_proto_header(self):
         hdrlen = 2
         if len(self._recv_buffer) >= hdrlen:
             self._jsonheader_len = struct.unpack("<H", self._recv_buffer[:hdrlen])[0]
             self._recv_buffer = self._recv_buffer[hdrlen:]
+            pass
+        pass
 
-    def _process_jsonheader(self):
+    def _process_json_header(self):
         hdrlen = self._jsonheader_len
         if len(self._recv_buffer) >= hdrlen:
             self._jsonheader = self._json_decode(self._recv_buffer[:hdrlen], "utf-8")
@@ -161,6 +151,9 @@ class Message:
             for reqhdr in ("byteorder", "content-length", "content-type", "content-encoding",):
                 if reqhdr not in self._jsonheader:
                     raise ValueError(f'Missing required header "{reqhdr}".')
+                pass
+            pass
+        pass
 
     def _process_request(self):
         content_len = self._jsonheader["content-length"]
@@ -172,9 +165,11 @@ class Message:
         if self._jsonheader["content-type"] == "text/json":
             encoding = self._jsonheader["content-encoding"]
             self._request = self._json_decode(data, encoding)
-            print("received request", repr(self._request), "from", self._addr)
-        else:
-            # Binary or unknown content-type
+            # print("received request", repr(self._request), "from", self._addr)
+        elif self._jsonheader["content-type"] == "binary/image":
+            # binary/image content-type
             self._request = data
+            pass
+        pass
 
         print(f'received {self._jsonheader["content-type"]} request from', self._addr, ", length:", content_len, )

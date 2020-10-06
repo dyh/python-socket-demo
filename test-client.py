@@ -1,4 +1,4 @@
-from socket_client.client import Client
+from client import Client
 
 if __name__ == '__main__':
     print('socket client is starting...')
